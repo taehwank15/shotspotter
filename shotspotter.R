@@ -1,16 +1,26 @@
 library(tidyverse)
+library(tidycensus)
+library(sf)
 
-data <- read_csv("eastpaloalto_sst.csv",
-                 col_types = cols(
-                   `Incident Number` = col_character(),
-                   `Case Number` = col_character(),
-                   `Entry Date/Time` = col_character(),
-                   `Entry Date/Time_1` = col_character(),
-                   Priority = col_character(),
-                   Type = col_character(),
-                   `Primary Unit` = col_character(),
-                   Dispo = col_character(),
-                   Location = col_character(),
-                   City = col_character(),
-                   State = col_character()
+# Validate
+
+census_api_key("92c13151737fd67fa744a0c0316d27b4a4c8caa2", install = TRUE)
+
+data <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/OakShots_latlong.csv",
+                 col_names= cols(
+                   OBJECTID = col_double(),
+                   CAD_ = col_character(),
+                   BEAT = col_character(),
+                   DATE___TIM = col_character(),
+                   ADDRESS = col_character(),
+                   CALL_ID = col_character(),
+                   DESCRIPTIO = col_character(),
+                   Xrough = col_double(),
+                   Yrough = col_double(),
+                   XCOORD = col_double(),
+                   YCOORD = col_double()
                  ))
+
+# Turn df into shape file
+
+# east_paloalto <- st_as_sf(data)
