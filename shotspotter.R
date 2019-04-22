@@ -47,7 +47,11 @@ shot_locations2 <- st_as_sf(data, coords = c("XCOORD", "YCOORD"), crs = 4326)
 # select a date range, then show the shots fired in oakland within that range
 
 
-oakland_shots %>% 
-  filter(DATE___TIM <=  "2008-04-16")
+# Takes out outlier data points from outside of Oakland
+
+filter(floor(XCOORD) != -142) %>% 
+filter(floor(YCOORD) != 30)
+(floor(YCOORD) != 30)
+  
 
 
