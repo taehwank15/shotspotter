@@ -18,11 +18,14 @@ ui <- fluidPage(
    # Sidebar with a slider inputs for start date and end date 
    sidebarLayout(
       sidebarPanel(
-         dateRangeInput(inputId = "startDate",
-                     label = "Start Date:",
-                     start = NULL,
-                     end = NULL,
-                     format = "yyyy-mm-dd")
+         dateRangeInput(inputId = "dateRange",
+                     label = "Date Range:",
+                     start = min(data$DATE___TIM),
+                     end = max(data$DATE___TIM),
+                     format = "yyyy-mm-dd",
+                     startview = "month",
+                     weekstart = 0,
+                     separator = " to ")
       ),
       
       # Show a plot of the generated distribution
