@@ -17,19 +17,19 @@ library(tidyverse)
 # Read in Oakland data from justicetechlab
 
 oakland_shots <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/OakShots_latlong.csv",
-                             col_types = cols(
-                               OBJECTID = col_double(),
-                               CAD_ = col_character(),
-                               BEAT = col_character(),
-                               DATE___TIM = col_character(),
-                               ADDRESS = col_character(),
-                               CALL_ID = col_character(),
-                               DESCRIPTIO = col_character(),
-                               Xrough = col_double(),
-                               Yrough = col_double(),
-                               XCOORD = col_double(),
-                               YCOORD = col_double()
-                             )) %>% 
+                          col_types = cols(
+                            OBJECTID = col_double(),
+                            CAD_ = col_character(),
+                            BEAT = col_character(),
+                            DATE___TIM = col_character(),
+                            ADDRESS = col_character(),
+                            CALL_ID = col_character(),
+                            DESCRIPTIO = col_character(),
+                            Xrough = col_double(),
+                            Yrough = col_double(),
+                            XCOORD = col_double(),
+                            YCOORD = col_double()
+                          )) %>% 
   mutate(DATE___TIM = mdy_hm(DATE___TIM))
 
 # Turn Oakland data into shape file
@@ -48,14 +48,14 @@ shapes <- raw_shapes %>%
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Shotspotter Data"),
-   
-   # Sidebar with a slider inputs for start date and end date 
-   sidebarLayout(
-      sidebarPanel(
-         dateRangeInput(inputId = "dateRange",
+  
+  # Application title
+  titlePanel("Shotspotter Data"),
+  
+  # Sidebar with a slider inputs for start date and end date 
+  sidebarLayout(
+    sidebarPanel(
+      dateRangeInput(inputId = "dateRange",
                      label = "Date Range:",
                      min = min(shot_locations$DATE___TIM),
                      start = median(shot_locations$DATE___TIM),
@@ -63,35 +63,47 @@ ui <- fluidPage(
                      format = "yyyy-mm-dd",
                      startview = "month",
                      weekstart = 0,
-                     separator = " to ")
-      ),
+                     separator = " to "),
       
-      # Show a plot of the generated distribution
-      mainPanel(
-         plotOutput("distPlot")
-      )
-   )
+      # add action button
+      actionButton(inputId = "update_date_range",
+                   label = "Update date range")
+    ),
+    
+    # Show a plot of the generated distribution
+    mainPanel(
+      plotOutput("distPlot")
+    )
+  )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
-   output$distPlot <- renderPlot({
-     
-      # Filter for dates matching input start and end
-      filtered_shots <- shot_locations %>% 
-        filter(DATE___TIM >= input$dateRange[1]) %>%
-        filter(DATE___TIM <= input$dateRange[2])
-        
-      
-      # draw the histogram with the specified number of bins
-      ggplot(data = shapes) +
-        geom_sf() +
-        geom_sf(data = filtered_shots) +
-        theme_map()
-   })
+  
+  # creates a new reactive expression to update the date range
+  new_date_range <- eventReactive(
+    eventExpr = input$update_date_range,
+    valueExpr = input$dateRange,
+    ignoreNULL = FALSE
+  )
+  
+  output$distPlot <- renderPlot({
+    
+    # Filter for dates matching input start and end
+    filtered_shots <- shot_locations %>% 
+      filter(DATE___TIM >= input$dateRange[1]) %>%
+      filter(DATE___TIM <= input$dateRange[2])
+    
+    
+    # draw the histogram with the specified number of bins
+    ggplot(data = shapes) +
+      geom_sf() +
+      geom_sf(data = filtered_shots) +
+      theme_map()
+  })
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
 
