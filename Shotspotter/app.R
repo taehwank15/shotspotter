@@ -36,7 +36,7 @@ oakland_shots <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/
 # Turn Oakland data into shape file
 
 shot_locations <- st_as_sf(oakland_shots, coords = c("XCOORD", "YCOORD"), crs = 4326) %>% 
-  sample_n(500)
+  sample_n(10)
 
 # Create map of urban areas, focusing in on Oakland
 
@@ -51,37 +51,46 @@ shapes <- raw_shapes %>%
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Shotspotter Data"),
-  
-  # Sidebar with a slider inputs for start date and end date 
-  sidebarLayout(
-    sidebarPanel(
-      dateRangeInput(inputId = "dateRange",
-                     label = "Date Range:",
-                     min = min(shot_locations$DATE___TIM),
-                     start = median(shot_locations$DATE___TIM),
-                     end = max(shot_locations$DATE___TIM),
-                     format = "yyyy-mm-dd",
-                     startview = "month",
-                     weekstart = 0,
-                     separator = " to "),
-      
-      # have user enter the number of data points they want to show up on plot
-      numericInput(inputId = "sample_size",
-                   label = "Sample Size",
-                   value = 15,
-                   min = 1),
-      
-      # add action button to update graph
-      actionButton(inputId = "update_plot",
-                   label = "Update plot")
-      
+  navbarPage("Shotspotter Data",
+    tabPanel("Map",
+    # Sidebar with a slider inputs for start date and end date 
+      sidebarLayout(
+        sidebarPanel(
+          dateRangeInput(inputId = "dateRange",
+                         label = "Date Range:",
+                         min = min(shot_locations$DATE___TIM),
+                         start = median(shot_locations$DATE___TIM),
+                         end = max(shot_locations$DATE___TIM),
+                         format = "yyyy-mm-dd",
+                         startview = "month",
+                         weekstart = 0,
+                         separator = " to "),
+          
+          # have user enter the number of data points they want to show up on plot
+          numericInput(inputId = "sample_size",
+                       label = "Sample Size",
+                       value = 2,
+                       min = 1),
+          
+          # add action button to update graph
+          actionButton(inputId = "update_plot",
+                       label = "Update plot")
+          
+        ),
+        
+        # Show a plot of the generated distribution
+        mainPanel(
+          plotOutput("distPlot")
+        )
+      )
     ),
-    
-    # Show a plot of the generated distribution
-    mainPanel(
-      plotOutput("distPlot")
-    )
+    tabPanel("About",
+             mainPanel(
+               h4("We would like to thank the Justice Tech Lab for making this amazing data available to us. All their data can be seen at: "),
+               a("http://justicetechlab.org/shotspotter-data/"),
+               h4("Our github repository can be seen at: "),
+               a("https://github.com/taehwank15/shotspotter")
+             ))
   )
 )
 
