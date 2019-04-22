@@ -13,6 +13,7 @@ library(ggthemes)
 library(lubridate)
 library(shiny)
 library(tidyverse)
+library(gganimate)
 
 # Read in Oakland data from justicetechlab
 
@@ -65,9 +66,16 @@ ui <- fluidPage(
                      weekstart = 0,
                      separator = " to "),
       
-      # add action button
-      actionButton(inputId = "update_date_range",
-                   label = "Update date range")
+      # have user enter the number of data points they want to show up on plot
+      numericInput(inputId = "sample_size",
+                   label = "Sample Size",
+                   value = 15,
+                   min = 1),
+      
+      # add action button to update graph
+      actionButton(inputId = "update_plot",
+                   label = "Update plot")
+      
     ),
     
     # Show a plot of the generated distribution
@@ -82,8 +90,14 @@ server <- function(input, output) {
   
   # creates a new reactive expression to update the date range
   new_date_range <- eventReactive(
-    eventExpr = input$update_date_range,
+    eventExpr = input$update_plot,
     valueExpr = input$dateRange,
+    ignoreNULL = FALSE
+  )
+  
+  new_sample_size <- eventReactive(
+    eventExpr = input$update_plot,
+    valueExpr = input$sample_size,
     ignoreNULL = FALSE
   )
   
@@ -91,15 +105,18 @@ server <- function(input, output) {
     
     # Filter for dates matching input start and end
     filtered_shots <- shot_locations %>% 
-      filter(DATE___TIM >= input$dateRange[1]) %>%
-      filter(DATE___TIM <= input$dateRange[2])
-    
+      filter(DATE___TIM >= new_date_range()[1]) %>%
+      filter(DATE___TIM <= new_date_range()[2]) %>% 
+      
+      # filter for the user's selected sample size
+      sample_n(new_sample_size())
     
     # draw the histogram with the specified number of bins
     ggplot(data = shapes) +
       geom_sf() +
       geom_sf(data = filtered_shots) +
-      theme_map()
+      theme_map() +
+      transition_time(filtered_shots$DATE___TIM)
   })
 }
 
