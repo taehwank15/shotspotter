@@ -110,23 +110,35 @@ server <- function(input, output) {
     ignoreNULL = FALSE
   )
   
-  output$distPlot <- renderPlot({
+  output$distPlot <- renderImage({
+    
+    outfile <- tempfile(fileex='.gif')
     
     # Filter for dates matching input start and end
     filtered_shots <- shot_locations %>% 
       filter(DATE___TIM >= new_date_range()[1]) %>%
       filter(DATE___TIM <= new_date_range()[2]) %>% 
-      
+      filter(is.na(DATE___TIM) == FALSE)
       # filter for the user's selected sample size
-      sample_n(new_sample_size())
+      #sample_n(new_sample_size())
     
     # draw the histogram with the specified number of bins
-    ggplot(data = shapes) +
+    p = ggplot(data = shapes) +
       geom_sf() +
       geom_sf(data = filtered_shots) +
       theme_map() +
       transition_time(filtered_shots$DATE___TIM)
-  })
+    
+    anim_save("outfile.gif", animate(p))
+    
+    list(src = "outfile.gif",
+         contentType = 'image/gif'
+         # width = 400,
+         # height = 300,
+         # alt = "This is alternate text"
+    )
+    
+  }, deleteFile = TRUE)
 }
 
 # Run the application 
