@@ -3,6 +3,7 @@ library(tidycensus)
 library(sf)
 library(tigris)
 library(ggthemes)
+library(lubridate)
 
 # Validate
 
@@ -19,7 +20,8 @@ data <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/OakShots_
                    Yrough = col_double(),
                    XCOORD = col_double(),
                    YCOORD = col_double()
-                 ))
+                 )) %>% 
+    mutate(DATE___TIM = mdy_hm(DATE___TIM))
 
 # Turn df into shape file
 
@@ -37,5 +39,11 @@ ggplot(data = shapes) +
   geom_sf() +
   geom_sf(data = shot_locations) +
   theme_map()
+
+shot_locations2 <- st_as_sf(data, coords = c("XCOORD", "YCOORD"), crs = 4326)
+
+# animation ideas
+# select an address, then show the shots fired at that address over time
+# select a date range, then show the shots fired in oakland within that range
 
 

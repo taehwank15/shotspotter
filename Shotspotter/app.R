@@ -13,16 +13,16 @@ library(shiny)
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Old Faithful Geyser Data"),
+   titlePanel("Shotspotter Data"),
    
-   # Sidebar with a slider input for number of bins 
+   # Sidebar with a slider inputs for start date and end date 
    sidebarLayout(
       sidebarPanel(
-         sliderInput("bins",
-                     "Number of bins:",
-                     min = 1,
-                     max = 50,
-                     value = 30)
+         dateRangeInput(inputId = "startDate",
+                     label = "Start Date:",
+                     start = NULL,
+                     end = NULL,
+                     format = "yyyy-mm-dd")
       ),
       
       # Show a plot of the generated distribution
