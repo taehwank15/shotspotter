@@ -31,12 +31,13 @@ oakland_shots <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/
                             XCOORD = col_double(),
                             YCOORD = col_double()
                           )) %>% 
-  mutate(DATE___TIM = mdy_hm(DATE___TIM))
+  mutate(DATE___TIM = mdy_hm(DATE___TIM)) %>% 
+  mutate(DATE___TIM = date(DATE___TIM))
 
 # Turn Oakland data into shape file
 
 shot_locations <- st_as_sf(oakland_shots, coords = c("XCOORD", "YCOORD"), crs = 4326) %>% 
-  sample_n(10)
+  sample_n(500)
 
 # Create map of urban areas, focusing in on Oakland
 
@@ -67,10 +68,13 @@ ui <- fluidPage(
                          separator = " to "),
           
           # have user enter the number of data points they want to show up on plot
-          numericInput(inputId = "sample_size",
-                       label = "Sample Size",
-                       value = 2,
-                       min = 1),
+          #numericInput(inputId = "sample_size",
+          #            label = "Sample Size",
+                    
+                       # this sets 2 to be the default value
+                       
+          #             value = 2,
+          #             min = 1),
           
           # add action button to update graph
           actionButton(inputId = "update_plot",
@@ -104,11 +108,11 @@ server <- function(input, output) {
     ignoreNULL = FALSE
   )
   
-  new_sample_size <- eventReactive(
-    eventExpr = input$update_plot,
-    valueExpr = input$sample_size,
-    ignoreNULL = FALSE
-  )
+  #new_sample_size <- eventReactive(
+  #  eventExpr = input$update_plot,
+  #  valueExpr = input$sample_size,
+  #  ignoreNULL = FALSE
+  #)
   
   output$distPlot <- renderImage({
     
@@ -120,14 +124,17 @@ server <- function(input, output) {
       filter(DATE___TIM <= new_date_range()[2]) %>% 
       filter(is.na(DATE___TIM) == FALSE)
       # filter for the user's selected sample size
-      #sample_n(new_sample_size())
+      # sample_n(new_sample_size())
     
     # draw the histogram with the specified number of bins
     p = ggplot(data = shapes) +
       geom_sf() +
       geom_sf(data = filtered_shots) +
-      theme_map() +
-      transition_time(filtered_shots$DATE___TIM)
+      # theme_map() +
+      transition_time(filtered_shots$DATE___TIM) +
+      labs(title = "Daily Shooting Patterns in Oakland, CA",
+           subtitle = "Date: {frame_time}",
+           caption = "Data Source: Justice Tech Lab")
     
     anim_save("outfile.gif", animate(p))
     
