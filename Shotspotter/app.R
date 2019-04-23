@@ -14,6 +14,9 @@ library(lubridate)
 library(shiny)
 library(tidyverse)
 library(gganimate)
+library(gifski)
+library(png)
+library(transformr)
 
 # Read in Oakland data from justicetechlab
 
@@ -35,7 +38,12 @@ oakland_shots <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/
   # Change DATE___TIM so that time is not a factor
   
   mutate(DATE___TIM = mdy_hm(DATE___TIM)) %>% 
-  mutate(DATE___TIM = date(DATE___TIM))
+  mutate(DATE___TIM = date(DATE___TIM)) %>% 
+  
+  # filter out outliers
+  
+  filter(floor(XCOORD) != -142) %>% 
+  filter(floor(YCOORD) != 30)
 
 # Turn Oakland data into shape file, sampling only 500 points to speed up render time
 
