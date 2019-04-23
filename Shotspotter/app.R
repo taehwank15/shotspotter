@@ -31,13 +31,17 @@ oakland_shots <- read_csv("http://justicetechlab.org/wp-content/uploads/2017/08/
                             XCOORD = col_double(),
                             YCOORD = col_double()
                           )) %>% 
+  
+  # Change DATE___TIM so that time is not a factor
+  
   mutate(DATE___TIM = mdy_hm(DATE___TIM)) %>% 
   mutate(DATE___TIM = date(DATE___TIM))
 
-# Turn Oakland data into shape file
+# Turn Oakland data into shape file, sampling only 500 points to speed up render time
 
 shot_locations <- st_as_sf(oakland_shots, coords = c("XCOORD", "YCOORD"), crs = 4326) %>% 
   sample_n(500)
+
 
 # Create map of urban areas, focusing in on Oakland
 
@@ -57,6 +61,10 @@ ui <- fluidPage(
     # Sidebar with a slider inputs for start date and end date 
       sidebarLayout(
         sidebarPanel(
+          h6("We decided to use a sample size of 500 so that rendering doesn't take too long"),
+          
+          # Place where user can select date range
+          
           dateRangeInput(inputId = "dateRange",
                          label = "Date Range:",
                          min = min(shot_locations$DATE___TIM),
@@ -67,27 +75,23 @@ ui <- fluidPage(
                          weekstart = 0,
                          separator = " to "),
           
-          # have user enter the number of data points they want to show up on plot
-          #numericInput(inputId = "sample_size",
-          #            label = "Sample Size",
-                    
-                       # this sets 2 to be the default value
-                       
-          #             value = 2,
-          #             min = 1),
+          # Add action button to update map
           
-          # add action button to update graph
           actionButton(inputId = "update_plot",
                        label = "Update plot")
           
         ),
         
-        # Show a plot of the generated distribution
+        # Show a plot of the generated map
+        
         mainPanel(
           plotOutput("distPlot")
         )
       )
     ),
+    
+    # Navbar tab to show github repo and credit thank justicetechlab
+    
     tabPanel("About",
              mainPanel(
                h4("We would like to thank the Justice Tech Lab for making this amazing data available to us. All their data can be seen at: "),
@@ -98,39 +102,37 @@ ui <- fluidPage(
   )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic required to animate map
+
 server <- function(input, output) {
   
-  # creates a new reactive expression to update the date range
+  # Creates a new reactive expression to update the date range only when button pressed
+  
   new_date_range <- eventReactive(
     eventExpr = input$update_plot,
     valueExpr = input$dateRange,
     ignoreNULL = FALSE
   )
   
-  #new_sample_size <- eventReactive(
-  #  eventExpr = input$update_plot,
-  #  valueExpr = input$sample_size,
-  #  ignoreNULL = FALSE
-  #)
-  
   output$distPlot <- renderImage({
+    
+    # Sets up an gif output 
     
     outfile <- tempfile(fileex='.gif')
     
     # Filter for dates matching input start and end
+    
     filtered_shots <- shot_locations %>% 
       filter(DATE___TIM >= new_date_range()[1]) %>%
       filter(DATE___TIM <= new_date_range()[2]) %>% 
       filter(is.na(DATE___TIM) == FALSE)
-      # filter for the user's selected sample size
-      # sample_n(new_sample_size())
     
-    # draw the histogram with the specified number of bins
+    # Create gif of daily shooting patterns in Oakland
+    
     p = ggplot(data = shapes) +
       geom_sf() +
       geom_sf(data = filtered_shots) +
-      # theme_map() +
+      theme_map() +
       transition_time(filtered_shots$DATE___TIM) +
       labs(title = "Daily Shooting Patterns in Oakland, CA",
            subtitle = "Date: {frame_time}",
@@ -140,9 +142,6 @@ server <- function(input, output) {
     
     list(src = "outfile.gif",
          contentType = 'image/gif'
-         # width = 400,
-         # height = 300,
-         # alt = "This is alternate text"
     )
     
   }, deleteFile = TRUE)
